@@ -10,6 +10,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.tox/
+.nox/
+.cache/
 
 # Virtual environments
 .venv/
@@ -24,6 +27,7 @@ dist/
 
 # Test and coverage output
 .coverage
+.coverage.*
 htmlcov/
 
 # IDE and editor settings
