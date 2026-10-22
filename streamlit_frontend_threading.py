@@ -1,6 +1,6 @@
 import streamlit as st
 from langgraph_backend import chatbot
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage
 import uuid
 
 # **************************************** utility functions *************************
@@ -24,16 +24,11 @@ def load_conversation(thread_id):
     # Check if messages key exists in state values, return empty list if not
     return state.values.get('messages', [])
 
-def make_thread_title(message,max_length=32):
-    title=" ".join(message.split())
-    if len(title)>max_length:
-        return title[:max_length -3].rstrip() + "..."
-    return title or "New Chat"
-
-
-
-
-    
+def make_thread_title(message, max_length=32):
+    title = " ".join(message.split())
+    if len(title) > max_length:
+        return title[:max_length - 3].rstrip() + "..."
+    return title or "New chat"
 
 # **************************************** Session Setup ******************************
 if 'message_history' not in st.session_state:
@@ -44,6 +39,9 @@ if 'thread_id' not in st.session_state:
 
 if 'chat_threads' not in st.session_state:
     st.session_state['chat_threads'] = []
+
+if 'thread_titles' not in st.session_state:
+    st.session_state['thread_titles'] = {}
 
 add_thread(st.session_state['thread_id'])
 
@@ -58,7 +56,8 @@ if st.sidebar.button('New Chat'):
 st.sidebar.header('My Conversations')
 
 for thread_id in st.session_state['chat_threads'][::-1]:
-    if st.sidebar.button(str(thread_id)):
+    title = st.session_state['thread_titles'].get(thread_id, "New chat")
+    if st.sidebar.button(title, key=f"thread_{thread_id}"):
         st.session_state['thread_id'] = thread_id
         messages = load_conversation(thread_id)
 
@@ -84,6 +83,9 @@ for message in st.session_state['message_history']:
 user_input = st.chat_input('Type here')
 
 if user_input:
+    thread_id = st.session_state['thread_id']
+    if thread_id not in st.session_state['thread_titles']:
+        st.session_state['thread_titles'][thread_id] = make_thread_title(user_input)
 
     # first add the message to message_history
     st.session_state['message_history'].append({'role': 'user', 'content': user_input})
