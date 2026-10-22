@@ -24,6 +24,16 @@ def load_conversation(thread_id):
     # Check if messages key exists in state values, return empty list if not
     return state.values.get('messages', [])
 
+def make_thread_title(message,max_length=32):
+    title=" ".join(message.split())
+    if len(title)>max_length:
+        return title[:max_length -3].rstrip() + "..."
+    return title or "New Chat"
+
+
+
+
+    
 
 # **************************************** Session Setup ******************************
 if 'message_history' not in st.session_state:
