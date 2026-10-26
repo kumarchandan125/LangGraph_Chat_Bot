@@ -11,7 +11,7 @@ from typing import Any, Iterable
 import streamlit as st
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
-from langgraph_tool_backend import (
+from langgraph_tool_backend_claude import (
     chatbot,
     retrieve_all_threads,
     retrieve_thread_titles,
