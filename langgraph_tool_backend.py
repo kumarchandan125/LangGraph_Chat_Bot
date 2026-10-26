@@ -46,7 +46,19 @@ def calculator(first_num:float,second_num:float,operation:str)->dict:
         return {"first_num": first_num, "second_num": second_num, "operation": operation, "result": result}
     except Exception as e:
         return {"error": str(e)}
-    
+
+@tool
+def get_stock_price(symbol:str)->dict:
+    """
+    Fetch latest stock price for a given symbol (e.g. 'AAPL', 'TSLA') 
+    using Alpha Vantage with API key in the URL.
+    """
+    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey=ECG2ZA1PXEA2TE0L"
+    r=requests.get(url)
+    return r.json()
+
+tools=[search_tool,get_stock_price,calculator]
+llm_with_tools=llm.bind_tools(tools)
 
 
 
@@ -68,18 +80,24 @@ def calculator(first_num:float,second_num:float,operation:str)->dict:
 
 
 
+# 3. State
 class ChatState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
+
+# 4. Nodes
 def chat_node(state: ChatState):
+    """LLM node that may answer or request a tool call."""
     messages = state['messages']
-    response_chunks = llm.stream(messages)
+    response_chunks = llm_with_tools.stream(messages)
     response = next(response_chunks, None)
     if response is None:
         raise RuntimeError("The chat model returned no response.")
     for chunk in response_chunks:
         response += chunk
     return {"messages": [response]}
+
+tool_node=ToolNode(tools)
 
 
 conn=sqlite3.connect(database='Chatbot.db', check_same_thread=False)
@@ -99,7 +117,10 @@ conn.commit()
 
 graph = StateGraph(ChatState)
 graph.add_node("chat_node", chat_node)
+graph.add_node('tools',tool_node)
+
 graph.add_edge(START, "chat_node")
+graph.add_conditional_edges('chat_node',tools_condition)
 graph.add_edge("chat_node", END)
 
 chatbot = graph.compile(checkpointer=checkpointer)
