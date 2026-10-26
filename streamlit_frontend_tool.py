@@ -1,3 +1,5 @@
+import json
+import uuid
 import streamlit as st
 from langgraph_tool_backend import (
     chatbot,
@@ -5,8 +7,7 @@ from langgraph_tool_backend import (
     retrieve_thread_titles,
     save_thread_title,
 )
-from langchain_core.messages import HumanMessage
-import uuid
+from langchain_core.messages import HumanMessage, ToolMessage
 
 # **************************************** utility functions *************************
 
@@ -34,6 +35,32 @@ def make_thread_title(message, max_length=32):
     if len(title) > max_length:
         return title[:max_length - 3].rstrip() + "..."
     return title or "New chat"
+
+def render_tool_result(content):
+    if isinstance(content, str):
+        try:
+            content = json.loads(content)
+        except json.JSONDecodeError:
+            st.text(content)
+            return
+
+    if isinstance(content, (dict, list)):
+        st.json(content, expanded=2)
+    else:
+        st.text(str(content))
+
+def extract_text(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            block if isinstance(block, str)
+            else block.get("text", "")
+            for block in content
+            if isinstance(block, str)
+            or (isinstance(block, dict) and isinstance(block.get("text"), str))
+        )
+    return ""
 
 # **************************************** Session Setup ******************************
 if 'message_history' not in st.session_state:
@@ -70,10 +97,19 @@ for thread_id in st.session_state['chat_threads']:
 
         for msg in messages:
             if isinstance(msg, HumanMessage):
-                role='user'
-            else:
-                role='assistant'
-            temp_messages.append({'role': role, 'content': msg.content})
+                temp_messages.append({'role': 'user', 'content': msg.content})
+            elif isinstance(msg, ToolMessage):
+                temp_messages.append({
+                    'role': 'assistant',
+                    'tool_result': True,
+                    'tool_name': msg.name or 'Tool',
+                    'content': msg.content,
+                })
+            elif extract_text(msg.content):
+                temp_messages.append({
+                    'role': 'assistant',
+                    'content': extract_text(msg.content),
+                })
 
         st.session_state['message_history'] = temp_messages
 
@@ -82,8 +118,13 @@ for thread_id in st.session_state['chat_threads']:
 
 # loading the conversation history
 for message in st.session_state['message_history']:
-    with st.chat_message(message['role']):
-        st.text(message['content'])
+    if message.get('tool_result'):
+        with st.chat_message('assistant'):
+            with st.expander(f"{message['tool_name']} result", expanded=True):
+                render_tool_result(message['content'])
+    elif message['content']:
+        with st.chat_message(message['role']):
+            st.markdown(message['content'])
 
 user_input = st.chat_input('Type here')
 
@@ -119,31 +160,40 @@ if user_input:
 
 
 
-     # first add the message to message_history
+
+
     with st.chat_message('assistant'):
-    
-            def text_chunks():
-                for message_chunk, _ in chatbot.stream(
-                    {'messages': [HumanMessage(content=user_input)]},
-                    config=CONFIG,
-                    stream_mode='messages'
-                ):
-                    content = message_chunk.content
-                    if isinstance(content, str):
-                        yield content
-                    elif isinstance(content, list):
-                        for block in content:
-                            if isinstance(block, str):
-                                yield block
-                            elif isinstance(block, dict) and block.get('type') == 'text':
-                                text = block.get('text')
-                                if isinstance(text, str):
-                                    yield text
-    
-            ai_message = st.write_stream(
-                text_chunks()
-            )
+        tool_results = st.container()
+        response_placeholder = st.empty()
+        ai_message_parts = []
 
+        for message_chunk, _ in chatbot.stream(
+            {'messages': [HumanMessage(content=user_input)]},
+            config=CONFIG,
+            stream_mode='messages'
+        ):
+            if getattr(message_chunk, 'type', None) == 'tool':
+                tool_name = getattr(message_chunk, 'name', None) or 'Tool'
+                tool_result = {
+                    'role': 'assistant',
+                    'tool_result': True,
+                    'tool_name': tool_name,
+                    'content': message_chunk.content,
+                }
+                st.session_state['message_history'].append(tool_result)
+                with tool_results:
+                    with st.expander(f"{tool_name} result", expanded=True):
+                        render_tool_result(message_chunk.content)
+                continue
 
-            
-    st.session_state['message_history'].append({'role': 'assistant', 'content': ai_message})
+            text = extract_text(message_chunk.content)
+            if text:
+                ai_message_parts.append(text)
+                response_placeholder.markdown(''.join(ai_message_parts))
+
+    ai_message = ''.join(ai_message_parts)
+    if ai_message:
+        st.session_state['message_history'].append({
+            'role': 'assistant',
+            'content': ai_message,
+        })

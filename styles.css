@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #0E1120;
+    --surface: #161A2E;
+    --surface-2: #1E2340;
+    --border: #2A3052;
+    --text: #E8EAF6;
+    --muted: #8B91B5;
+    --accent: #8B9CFF;
+    --accent-strong: #6F82FF;
+    --tool: #F2B84B;
+}
+
+html, body, [class*="css"], .stApp {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+.stApp { background: var(--bg); color: var(--text); }
+
+/* Chrome */
+#MainMenu, footer { visibility: hidden; }
+[data-testid="stHeader"] { background: transparent; }
+.block-container { padding-top: 2rem; padding-bottom: 7rem; max-width: 780px; }
+
+/* Sidebar */
+[data-testid="stSidebar"] { background: var(--surface); border-right: 1px solid var(--border); }
+[data-testid="stSidebar"] h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+[data-testid="stSidebar"] h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-top: 1rem; }
+[data-testid="stSidebar"] .stButton > button,
+[data-testid="stSidebar"] .stDownloadButton > button {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+[data-testid="stSidebar"] .stButton > button:hover,
+[data-testid="stSidebar"] .stDownloadButton > button:hover {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--text);
+}
+[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+    background: var(--surface-2);
+    border: 1px solid var(--accent-strong);
+}
+
+/* Messages */
+[data-testid="stChatMessage"] { background: transparent; padding: 0.6rem 0; gap: 0.9rem; }
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    margin: 0.4rem 0;
+}
+[data-testid="stChatMessageAvatarUser"] { background: var(--accent-strong); color: #fff; }
+[data-testid="stChatMessageAvatarAssistant"] { background: var(--surface-2); border: 1px solid var(--border); }
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] li { line-height: 1.7; font-size: 0.97rem; }
+[data-testid="stChatMessage"] code {
+    background: var(--surface-2); color: var(--accent); border-radius: 6px; padding: 0.1rem 0.35rem;
+}
+[data-testid="stChatMessage"] pre {
+    background: var(--surface) !important; border: 1px solid var(--border); border-radius: 12px;
+}
+
+/* Tool status blocks */
+[data-testid="stStatus"], [data-testid="stExpander"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--tool);
+    border-radius: 12px;
+    margin: 0.4rem 0;
+}
+[data-testid="stStatus"] summary, [data-testid="stExpander"] summary {
+    color: var(--muted); font-size: 0.9rem; font-weight: 500;
+}
+[data-testid="stStatus"] summary:hover, [data-testid="stExpander"] summary:hover { color: var(--text); }
+
+/* Chat input */
+[data-testid="stChatInput"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+[data-testid="stChatInput"]:focus-within { border-color: var(--accent-strong); }
+[data-testid="stChatInput"] textarea { color: var(--text); font-family: inherit; }
+[data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"] { background: transparent; }
+
+/* Empty state */
+.hero { text-align: center; padding: 3.5rem 0 1.5rem; }
+.hero h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+.hero p { color: var(--muted); font-size: 1rem; margin: 0; }
+
+[data-testid="stMain"] .stButton > button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    height: 100%;
+    font-weight: 500;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+[data-testid="stMain"] .stButton > button:hover {
+    border-color: var(--accent-strong);
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}

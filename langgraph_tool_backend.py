@@ -1,4 +1,4 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START
 from typing import TypedDict, Annotated
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -65,21 +65,6 @@ llm_with_tools=llm.bind_tools(tools)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 3. State
 class ChatState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
@@ -121,7 +106,7 @@ graph.add_node('tools',tool_node)
 
 graph.add_edge(START, "chat_node")
 graph.add_conditional_edges('chat_node',tools_condition)
-graph.add_edge("chat_node", END)
+graph.add_edge('tools', 'chat_node')
 
 chatbot = graph.compile(checkpointer=checkpointer)
 
